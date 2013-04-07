@@ -201,11 +201,11 @@ if __name__ == '__main__':
                     rospy.loginfo(" Read Header from IMU") # should got OK here
                 else :
                     rospy.logerr(" No Header from IMU data. Please check serial port!") # should got OK here
-                    rospy.logerr('[0]Received No IMU header from KVH CG-5100 IMU Please check IMU serial port and IMU Power. Shutdown!')
+                    rospy.logerr('[0]Received No IMU header from KVH CG-5100 IMU. Please check IMU serial port and IMU Power. Shutdown!')
                     rospy.signal_shutdown('Received No IMU header from KVH CG-5100 IMU')
         else:
                 #sned error no data in buffer error
-                rospy.logerr('[1]Received No data from KVH CG-5100 IMU Please check IMU serial port and IMU Power. Shutdown!')
+                rospy.logerr('[1]Received No data from KVH CG-5100 IMU. Please check IMU serial port and IMU Power. Shutdown!')
                 rospy.signal_shutdown('Received No data from KVH CG-5100 IMU')
 
         dayaSynced=False
@@ -230,7 +230,7 @@ if __name__ == '__main__':
                 data = KVH_IMU.read(36)
                 DataTimeSec = rospy.get_time()
                 if (KVH_IMU.inWaiting()>=36) : # if we still have data in buffer .... we process data too slow show error and re-sync
-                    rospy.logerr(" Seems we have too much IMU data in buffer or to slow in process data , must re-sync") # 
+                    rospy.logerr(" Seems we have too much IMU data in buffer or too slow in processing data , must re-sync") # 
                     rospy.loginfo("Data in buffer %i" % KVH_IMU.inWaiting() ) # should got some data
                     dayaSynced=False
             if not dayaSynced :
