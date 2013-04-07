@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="KVH_CG5100_IMU" type="KVH_CG5100_IMU.py" name="KVH_CG5100_IMU" respawn="true" output="screen">
+    <param name="port" value="/dev/sensors/ftdi_CG-5100" />
+    <param name="baud" value="115200" />
+  </node>
+</launch>
