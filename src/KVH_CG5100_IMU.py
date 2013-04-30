@@ -152,7 +152,7 @@ if __name__ == '__main__':
     rospy.init_node('KVHCG5100IMU')
     Pos_pub = rospy.Publisher('imu/Heading_local', Pose2D)
     Imu_pub = rospy.Publisher('imu/data', Imu)
-    Twist_pub = rospy.Publisher('imu/speed', Twist)
+    #Twist_pub = rospy.Publisher('imu/speed', Twist)
     # TODO add publisher for IMU_Status here
     # TODO add publisher for IMU velocity here
     KVHCG5100Pose2D=Pose2D()
@@ -182,7 +182,7 @@ if __name__ == '__main__':
                                                0, 1e-6, 0, 
                                                0, 0, 1e-6]
 
-    twist_data = Twist()
+    #twist_data = Twist()
     #twist_data = Twist(header=rospy.Header(frame_id="KVH_CG5100_IMU"))
     rospy.on_shutdown(KVHCG5100shutdownhook) 
 
@@ -208,7 +208,7 @@ if __name__ == '__main__':
                 rospy.logerr('[1]Received No data from KVH CG-5100 IMU. Please check IMU serial port and IMU Power. Shutdown!')
                 rospy.signal_shutdown('Received No data from KVH CG-5100 IMU')
 
-        dayaSynced=False
+        dataSynced=False
         data=""
         X=0
         Y=0
@@ -226,14 +226,14 @@ if __name__ == '__main__':
         #i=0
         while not rospy.is_shutdown():
         
-            if (dayaSynced) :
+            if (dataSynced) :
                 data = KVH_IMU.read(36)
                 DataTimeSec = rospy.get_time()
-                if (KVH_IMU.inWaiting()>=36) : # if we still have data in buffer .... we process data too slow show error and re-sync
-                    rospy.logerr(" Seems we have too much IMU data in buffer or too slow in processing data , must re-sync") # 
-                    rospy.loginfo("Data in buffer %i" % KVH_IMU.inWaiting() ) # should got some data
-                    dayaSynced=False
-            if not dayaSynced :
+            #    if (KVH_IMU.inWaiting()>=36) : # if we still have data in buffer .... we process data too slow show error and re-sync
+            #        rospy.logerr(" Seems we have too much IMU data in buffer or too slow in processing data , must re-sync") # 
+            #        rospy.loginfo("Data in buffer %i" % KVH_IMU.inWaiting() ) # should got some data
+            #        dataSynced=False
+            if not dataSynced :
                 data += KVH_IMU.read(KVH_IMU.inWaiting())
                 while (len(data)>=36):
                     if ("\xfe\x81\xff\x55" == data[0:4]):
@@ -243,14 +243,14 @@ if __name__ == '__main__':
                             # only keep the lastest data
                         data=data[len(data)-36:]
                         if (len(data)==36):
-                            dayaSynced=True
+                            dataSynced=True
                             DataTimeSec = rospy.get_time() 
                             break       
                     else :
                         data=data[1:] # drop 1 byte if not header
                         
             try:
-                if (dayaSynced) :
+                if (dataSynced) :
                             if CehckCRC(data):
 
                                 #      0  1 mSec 2  3Ax  4Ay     5Az     5  7Gx  8Gy  9G    10 11YawT 1213w  14x   15y  16z
@@ -313,13 +313,13 @@ if __name__ == '__main__':
                                 
                                 # TODO publish IMU Velocity data here
                                 
-                                twist_data.linear.x=Vx
-                                twist_data.linear.y=Vy
-                                twist_data.linear.z=Vz
-                                twist_data.angular.x=imu_data.angular_velocity.x
-                                twist_data.angular.y=imu_data.angular_velocity.y
-                                twist_data.angular.z=imu_data.angular_velocity.z
-                                Twist_pub.publish(twist_data)
+                                #twist_data.linear.x=Vx
+                                #twist_data.linear.y=Vy
+                                #twist_data.linear.z=Vz
+                                #twist_data.angular.x=imu_data.angular_velocity.x
+                                #twist_data.angular.y=imu_data.angular_velocity.y
+                                #twist_data.angular.z=imu_data.angular_velocity.z
+                                #Twist_pub.publish(twist_data)
                                 # save the current data for next loop
                                 Ex_old=Ex
                                 Ey_old=Ey

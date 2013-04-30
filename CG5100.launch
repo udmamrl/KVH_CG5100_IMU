@@ -2,5 +2,7 @@
   <node pkg="KVH_CG5100_IMU" type="KVH_CG5100_IMU.py" name="KVH_CG5100_IMU" respawn="true" output="screen">
     <param name="port" value="/dev/sensors/ftdi_CG-5100" />
     <param name="baud" value="115200" />
+    <remap from="imu/data" to="KVH_imu/data"/>
+    <remap from="imu/Heading_local" to="KVH_imu/Heading_local"/>
   </node>
 </launch>
