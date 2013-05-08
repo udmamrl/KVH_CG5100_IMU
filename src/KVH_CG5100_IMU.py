@@ -220,6 +220,7 @@ if __name__ == '__main__':
         Vy_old=0.0
         Vz_old=0.0
         Time_step=0.01
+	CRC_errorcounter=0
         #data = KVH_IMU.readline()
         #Read in KVH_IMU
         #data='\x00\x00\x00\x00\x77\x4c\x0e\x34\xfe\x81\xff\x55\xb5\xdd\x3b\xcb\xb5\xbf\x30\xc5\x34\x8e\x9b\xba\x39\x2e\x14\xbe\x3a\x14\xa0\x87\x3d\xc8\xab\xed\x00\x00\x00\x00\x77\x4d\x0d\x27'
@@ -339,6 +340,16 @@ if __name__ == '__main__':
                                 rospy.logerr("[3] CRC error. Sentence was: %s" % ':'.join(x.encode('hex') for x in data))
                                 rospy.logerr("[3] CRC error, must re-sync") # 
                                 dayaSynced=False
+                                CRC_errorcounter=CRC_errorcounter+1
+                                if (CRC_errorcounter>20):
+                                        CRC_errorcounter=0
+                                        rospy.logerr('Too Much CRC error ,Closing IMU Serial port')
+                                        KVH_IMU.close() #Close KVH_IMU serial port
+                                        time.sleep(0.01)
+                                        rospy.logerr('Too Much CRC error ,try to Open IMU Serial port again')
+                                        KVH_IMU.open() #Close KVH_IMU serial port
+
+
                                 
                 #else:
                         #rospy.logerr("[4]Received a sentence but not correct. Sentence was: %s" % ':'.join(x.encode('hex') for x in data))
