@@ -192,19 +192,19 @@ if __name__ == '__main__':
         #Setup Compass serial port
         KVH_IMU = serial.Serial(port=KVH_IMUport, baudrate=KVH_IMUrate, timeout=.5)
         time.sleep(0.1)
-        # readout all data, if any
+        # read out all data, if any
         rospy.loginfo("Test Read data from IMU Got bytes %i" % KVH_IMU.inWaiting() ) # should got some data
         if (KVH_IMU.inWaiting() >0):
                 #read out all datas, the response shuldbe OK
                 data=KVH_IMU.read(KVH_IMU.inWaiting())
                 if ("\xfe\x81\xff\x55" in data) :
-                    rospy.loginfo(" Read Header from IMU") # should got OK here
+                    rospy.loginfo(" Got Data Header from IMU") # should got IMU data header
                 else :
-                    rospy.logerr(" No Header from IMU data. Please check serial port!") # should got OK here
+                    rospy.logerr(" No Data Header from IMU data. Please check serial port!") # No Header show error
                     rospy.logerr('[0]Received No IMU header from KVH CG-5100 IMU. Please check IMU serial port and IMU Power. Shutdown!')
                     rospy.signal_shutdown('Received No IMU header from KVH CG-5100 IMU')
         else:
-                #sned error no data in buffer error
+                #send error, if no data in buffer
                 rospy.logerr('[1]Received No data from KVH CG-5100 IMU. Please check IMU serial port and IMU Power. Shutdown!')
                 rospy.signal_shutdown('Received No data from KVH CG-5100 IMU')
 
@@ -339,7 +339,7 @@ if __name__ == '__main__':
                             else:
                                 rospy.logerr("[3] CRC error. Sentence was: %s" % ':'.join(x.encode('hex') for x in data))
                                 rospy.logerr("[3] CRC error, must re-sync") # 
-                                dayaSynced=False
+                                dataSynced=False
                                 CRC_errorcounter=CRC_errorcounter+1
                                 if (CRC_errorcounter>20):
                                         CRC_errorcounter=0
