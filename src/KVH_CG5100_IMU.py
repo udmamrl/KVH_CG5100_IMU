@@ -166,6 +166,11 @@ if __name__ == '__main__':
     #KVH_IMUprintmodulus = rospy.get_param('~printmodulus',1)
     #IMU heading offset in degree
     #KVH_IMU_offset = rospy.get_param('~offset',0.)
+
+    CRC_error_limits   =rospy.get_param('~CRC_error_limits', 10.)
+    CRC_errorcounter=0
+
+
     imu_data = Imu()
     imu_data = Imu(header=rospy.Header(frame_id="KVH_CG5100_IMU"))
     
@@ -191,16 +196,22 @@ if __name__ == '__main__':
         #ReadCompass()
         #Setup Compass serial port
         KVH_IMU = serial.Serial(port=KVH_IMUport, baudrate=KVH_IMUrate, timeout=.5)
+        
+        ### start of loop back test ###
+        #testdata="\xfe\x81\xff\x55\x35\x80\x66\xd8\xb5\xe1\xc8\xbe\x35\x91\xdd\x76\x38\xe4\x92\x24\x39\xfc\x05\xd7\x3d\xc8\xfb\x66\x00\x00\x00\x00\x77\x4c\x0e\x34"
+        #KVH_IMU.write(testdata)
+        ### end of loop back test ###
+        
         time.sleep(0.1)
         # readout all data, if any
-        rospy.loginfo("Test Read data from IMU Got bytes %i" % KVH_IMU.inWaiting() ) # should got some data
+        rospy.loginfo("Test reading data from IMU. Got bytes %i" % KVH_IMU.inWaiting() ) # should got some data
         if (KVH_IMU.inWaiting() >0):
                 #read out all datas, the response shuldbe OK
                 data=KVH_IMU.read(KVH_IMU.inWaiting())
                 if ("\xfe\x81\xff\x55" in data) :
-                    rospy.loginfo(" Read Header from IMU") # should got OK here
+                    rospy.loginfo(" Got Header from IMU") 
                 else :
-                    rospy.logerr(" No Header from IMU data. Please check serial port!") # should got OK here
+                    rospy.logerr("No Header from IMU data. Please check serial port!") 
                     rospy.logerr('[0]Received No IMU header from KVH CG-5100 IMU. Please check IMU serial port and IMU Power. Shutdown!')
                     rospy.signal_shutdown('Received No IMU header from KVH CG-5100 IMU')
         else:
@@ -210,9 +221,9 @@ if __name__ == '__main__':
 
         dataSynced=False
         data=""
-        X=0
-        Y=0
-        Z=0
+        X=0.
+        Y=0.
+        Z=0.
         Ex_old=0.0
         Ey_old=0.0
         Ez_old=0.0
@@ -220,13 +231,13 @@ if __name__ == '__main__':
         Vy_old=0.0
         Vz_old=0.0
         Time_step=0.01
-	CRC_errorcounter=0
-        #data = KVH_IMU.readline()
-        #Read in KVH_IMU
-        #data='\x00\x00\x00\x00\x77\x4c\x0e\x34\xfe\x81\xff\x55\xb5\xdd\x3b\xcb\xb5\xbf\x30\xc5\x34\x8e\x9b\xba\x39\x2e\x14\xbe\x3a\x14\xa0\x87\x3d\xc8\xab\xed\x00\x00\x00\x00\x77\x4d\x0d\x27'
-        #i=0
         while not rospy.is_shutdown():
-        
+  
+            ### start of loop back test ###
+            #testdata="\xfe\x81\xff\x55\x35\x80\x66\xd8\xb5\xe1\xc8\xbe\x35\x91\xdd\x76\x38\xe4\x92\x24\x39\xfc\x05\xd7\x3d\xc8\xfb\x66\x00\x00\x00\x00\x77\x4c\x0e\x34"
+            #KVH_IMU.write(testdata)
+            ### end of loop back test ### 
+                 
             if (dataSynced) :
                 data = KVH_IMU.read(36)
                 DataTimeSec = rospy.get_time()
@@ -234,7 +245,7 @@ if __name__ == '__main__':
             #        rospy.logerr(" Seems we have too much IMU data in buffer or too slow in processing data , must re-sync") # 
             #        rospy.loginfo("Data in buffer %i" % KVH_IMU.inWaiting() ) # should got some data
             #        dataSynced=False
-            if not dataSynced :
+            else : # if not synced , look for header
                 data += KVH_IMU.read(KVH_IMU.inWaiting())
                 while (len(data)>=36):
                     if ("\xfe\x81\xff\x55" == data[0:4]):
@@ -254,8 +265,6 @@ if __name__ == '__main__':
                 if (dataSynced) :
                             if CehckCRC(data):
 
-                                #      0  1 mSec 2  3Ax  4Ay     5Az     5  7Gx  8Gy  9G    10 11YawT 1213w  14x   15y  16z
-                                #data='P:,878979,ap,-6.34,-22.46,1011.71,gp,0.00,0.00,-0.00,yt,342.53,q,0.98,-0.01,0.01,-0.15'
                                 fields=struct.unpack(">fffffffBB",data[4:34])
                                 # 1,2,3,4       : X angle, SPFP( Single-precision floating point) +/-0.66 radians
                                 # 5,6,7,8       : Y angle, SPFP( Single-precision floating point) +/-0.66 radians
@@ -334,19 +343,22 @@ if __name__ == '__main__':
                                 KVHCG5100Pose2D.theta = wrapToPI(Z)
 
                                 Pos_pub.publish(KVHCG5100Pose2D)
-
+                                
+                                # reset counter once you have good data
+                                CRC_errorcounter=0
 
                             else:
                                 rospy.logerr("[3] CRC error. Sentence was: %s" % ':'.join(x.encode('hex') for x in data))
                                 rospy.logerr("[3] CRC error, must re-sync") # 
                                 dayaSynced=False
                                 CRC_errorcounter=CRC_errorcounter+1
-                                if (CRC_errorcounter>20):
+                                if (CRC_errorcounter>CRC_error_limits):
                                         CRC_errorcounter=0
-                                        rospy.logerr('Too Much CRC error ,Closing IMU Serial port')
+                                        rospy.logfatal('Too Much Back-to-Back CRC error ,Closing KVH IMU Serial port')
                                         KVH_IMU.close() #Close KVH_IMU serial port
+                                        KVH_IMU = serial.Serial(port=KVH_IMUport, baudrate=KVH_IMUrate, timeout=.5)
                                         time.sleep(0.01)
-                                        rospy.logerr('Too Much CRC error ,try to Open IMU Serial port again')
+                                        rospy.loginfo('Try to re-open IMU Serial port')
                                         KVH_IMU.open() #Close KVH_IMU serial port
 
 
