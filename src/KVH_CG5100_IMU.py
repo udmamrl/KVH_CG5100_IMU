@@ -113,7 +113,7 @@ from geometry_msgs.msg import Pose2D
 
 import serial, string, math, time, calendar
 import struct
-#import tf
+import tf
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Twist
@@ -209,13 +209,13 @@ if __name__ == '__main__':
                 #read out all datas, the response shuldbe OK
                 data=KVH_IMU.read(KVH_IMU.inWaiting())
                 if ("\xfe\x81\xff\x55" in data) :
-                    rospy.loginfo(" Got Header from IMU") 
+                    rospy.loginfo("Got Header from IMU") 
                 else :
-                    rospy.logerr("No Header from IMU data. Please check serial port!") 
+                    rospy.logerr("Got No Header from IMU data. Please check serial port!") 
                     rospy.logerr('[0]Received No IMU header from KVH CG-5100 IMU. Please check IMU serial port and IMU Power. Shutdown!')
                     rospy.signal_shutdown('Received No IMU header from KVH CG-5100 IMU')
         else:
-                #sned error no data in buffer error
+                #send error, if no data in buffer
                 rospy.logerr('[1]Received No data from KVH CG-5100 IMU. Please check IMU serial port and IMU Power. Shutdown!')
                 rospy.signal_shutdown('Received No data from KVH CG-5100 IMU')
 
@@ -294,7 +294,11 @@ if __name__ == '__main__':
                                 X+=Ex
                                 Y+=Ey
                                 Z+=Ez
-                                imu_quaternion=quaternion_from_euler(X,Y,Z) # Euler's roll, pitch and yaw angles
+                                
+                                #http://answers.ros.org/question/53688/euler-angle-convention-in-tf/
+                                # ???--> #imu_quaternion=quaternion_from_euler(X,Y,Z) # Euler's roll, pitch and yaw angles
+                                #q = tf.transformations.quaternion_from_euler(yaw, pitch, roll, 'rzyx')
+                                imu_quaternion=tf.transformations.quaternion_from_euler(Z, Y, X, 'rzyx')
                                 #imu_quaternion=quaternion_from_euler(Ex,Ey,Ez) # Euler's roll, pitch and yaw angles
                                 imu_data.orientation.x=imu_quaternion[0]
                                 imu_data.orientation.y=imu_quaternion[1]
@@ -350,7 +354,7 @@ if __name__ == '__main__':
                             else:
                                 rospy.logerr("[3] CRC error. Sentence was: %s" % ':'.join(x.encode('hex') for x in data))
                                 rospy.logerr("[3] CRC error, must re-sync") # 
-                                dayaSynced=False
+                                dataSynced=False
                                 CRC_errorcounter=CRC_errorcounter+1
                                 if (CRC_errorcounter>CRC_error_limits):
                                         CRC_errorcounter=0
