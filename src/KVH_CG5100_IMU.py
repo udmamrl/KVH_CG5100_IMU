@@ -106,7 +106,6 @@
 #    if this is true CRC ok 
 #       sum(Acrc[0:30])==Acrc[30]
 
-import roslib; roslib.load_manifest('KVH_CG5100_IMU')
 import rospy
 from std_msgs.msg import String
 from geometry_msgs.msg import Pose2D
